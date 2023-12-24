@@ -9,6 +9,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -35,6 +37,7 @@ public class VinService {
     public BigDecimal calculerMontantTotal() {
         sqlRequest();
         entityManagerRequest();
+        requestJdbcTemplate();
         List<Vin> vins = vinRepository.findAll();
         BigDecimal total = calculerMontantTotal(vins);
         venteRepository.save(Vente.builder().id(id++).montantTotal(total).quantite(vins.size()).build());
@@ -51,10 +54,10 @@ public class VinService {
 
     private void sqlRequest() {
         try (Connection connection = base1DataSource.getConnection();
-                PreparedStatement ps = connection.prepareStatement("SELECT DISTINCT chateau FROM vin");
-                ResultSet rs = ps.executeQuery();) {
+             PreparedStatement ps = connection.prepareStatement("SELECT DISTINCT chateau FROM vin");
+             ResultSet rs = ps.executeQuery();) {
             while (rs.next()) {
-                log.info("RESULTAT : {}", rs.getString("chateau"));
+                log.info("RESULTAT PREPARED STATEMENT : {}", rs.getString("chateau"));
             }
 
         } catch (SQLException e) {
@@ -67,7 +70,14 @@ public class VinService {
         String sql = "SELECT DISTINCT quantite FROM vin";
         Query query = base1EntityManager.createNativeQuery(sql);
         List<Integer> result = query.getResultList();
-        result.forEach(r -> log.info("RESULTAT : {}", r));
+        result.forEach(r -> log.info("RESULTAT ENTITY MANAGER : {}", r));
+    }
+
+    private void requestJdbcTemplate() {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(base1DataSource);
+        var mapper = new BeanPropertyRowMapper<>(Vin.class);
+        List<Vin> result = jdbcTemplate.query("SELECT * FROM vin", mapper);
+        result.forEach(r -> log.info("RESULTAT JDBC TEMPLATE : {}", r));
     }
 
 }
