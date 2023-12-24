@@ -6,7 +6,5 @@ Configuration d'un projet Spring Boot avec 2 bases de données :
 
 Utilisation de ces 2 bases dans les tests Cucumber
 
-**TODO** :
-- utilisation des entity manager de chaque BDD pour faire des requêtes manuelles
-- gestion des transactions avec des requêtes dans plusieurs bases
+**TODO** : gestion des transactions avec des requêtes dans plusieurs bases
 
